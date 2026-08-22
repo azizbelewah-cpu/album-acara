@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
+import imageCompression from 'browser-image-compression';
 
 export default function CameraPage() {
   const [photos, setPhotos] = useState<string[]>([]);
@@ -47,14 +48,25 @@ export default function CameraPage() {
       }
 
       setUploading(true);
-      const file = event.target.files[0];
-      const fileExt = file.name.split('.').pop();
+      const originalFile = event.target.files[0];
+
+      // OPSI KOMPRESI: Menjaga visual tetap tajam & menghemat ukuran file (~80-90%)
+      const compressionOptions = {
+        maxSizeMB: 0.6,          // Ukuran maksimal ~600 KB
+        maxWidthOrHeight: 1920,  // Resolusi Full HD (sangat tajam di HP)
+        useWebWorker: true,
+      };
+
+      // Proses kompresi di latar belakang
+      const compressedFile = await imageCompression(originalFile, compressionOptions);
+
+      const fileExt = originalFile.name.split('.').pop();
       const fileName = `${Date.now()}.${fileExt}`;
       const filePath = `${fileName}`;
 
       const { error: uploadError } = await supabase.storage
         .from('foto-acara')
-        .upload(filePath, file);
+        .upload(filePath, compressedFile);
 
       if (uploadError) throw uploadError;
 
@@ -80,7 +92,6 @@ export default function CameraPage() {
         <p className="text-xs uppercase tracking-widest text-amber-200/70 font-semibold mb-1">
           Wedding Gallery
         </p>
-        {/* Ubah Nama Pengantin Di Sini */}
         <h1 className="font-wedding text-5xl text-amber-300 py-1 drop-shadow">
           nama & nama
         </h1>
@@ -98,7 +109,7 @@ export default function CameraPage() {
       {photos.length < MAX_PHOTOS ? (
         <div className="flex flex-col items-center my-4 w-full">
           <label className="cursor-pointer bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-bold py-3.5 px-8 rounded-full shadow-lg text-base flex items-center justify-center gap-2 w-3/4 text-center transition-all active:scale-95">
-            {uploading ? 'Mengunggah...' : '📸 Ambil Foto'}
+            {uploading ? 'Memproses & Mengunggah...' : '📸 Ambil Foto'}
             <input
               type="file"
               accept="image/*"
@@ -110,7 +121,7 @@ export default function CameraPage() {
           </label>
         </div>
       ) : (
-        /* Ucapan Terima Kasih Elegan */
+        /* Ucapan Terima Kasih */
         <div className="bg-gradient-to-b from-slate-900 to-slate-950 border border-amber-500/30 p-6 rounded-2xl text-center my-4 w-full shadow-2xl">
           <span className="text-3xl">💍</span>
           <h2 className="font-wedding text-4xl text-amber-300 mt-1">Terima Kasih</h2>
