@@ -1,14 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase'; // Sesuaikan path supabase client kamu
+import { supabase } from '@/lib/supabase';
 
 export default function CameraPage() {
   const [photos, setPhotos] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [downloadingIndex, setDownloadingIndex] = useState<number | null>(null);
   const MAX_PHOTOS = 5;
 
-  // 1. Ambil riwayat foto tamu dari browser saat pertama kali dibuka
   useEffect(() => {
     const savedPhotos = localStorage.getItem('my_guest_photos');
     if (savedPhotos) {
@@ -16,7 +16,30 @@ export default function CameraPage() {
     }
   }, []);
 
-  // 2. Fungsi Unggah Foto ke Supabase
+  // FUNGSI UTAMA: Langsung download foto tanpa buka tab baru
+  const handleDownload = async (imageUrl: string, index: number) => {
+    try {
+      setDownloadingIndex(index);
+      const response = await fetch(imageUrl);
+      const blob = await response.blob();
+      
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = `foto-acara-${index + 1}.jpg`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
+    } catch (error) {
+      console.error('Gagal mengunduh foto:', error);
+      // Fallback jika fetch diblokir
+      window.open(imageUrl, '_blank');
+    } finally {
+      setDownloadingIndex(null);
+    }
+  };
+
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     try {
       if (!event.target.files || event.target.files.length === 0) return;
@@ -31,18 +54,15 @@ export default function CameraPage() {
       const fileName = `${Date.now()}.${fileExt}`;
       const filePath = `${fileName}`;
 
-      // Unggah ke bucket Supabase
       const { error: uploadError } = await supabase.storage
         .from('foto-acara')
         .upload(filePath, file);
 
       if (uploadError) throw uploadError;
 
-      // Ambil URL Publik Foto
       const { data } = supabase.storage.from('foto-acara').getPublicUrl(filePath);
       const photoUrl = data.publicUrl;
 
-      // Update daftar foto tamu & simpan di localStorage HP
       const updatedPhotos = [...photos, photoUrl];
       setPhotos(updatedPhotos);
       localStorage.setItem('my_guest_photos', JSON.stringify(updatedPhotos));
@@ -59,20 +79,18 @@ export default function CameraPage() {
     <main className="min-h-screen bg-slate-900 text-white p-4 max-w-md mx-auto flex flex-col items-center">
       <h1 className="text-2xl font-bold mt-4 mb-2">📸 Disposable Cam</h1>
 
-      {/* Indikator Kuota Foto */}
       <div className="bg-slate-800 px-4 py-2 rounded-full text-sm font-semibold mb-6 border border-slate-700">
         Sisa Kuota: <span className="text-orange-400 font-bold">{MAX_PHOTOS - photos.length}</span> / {MAX_PHOTOS}
       </div>
 
-      {/* JIKA KUOTA MASIH ADA: TAMPILKAN TOMBOL KAMERA */}
       {photos.length < MAX_PHOTOS ? (
-        <div className="flex flex-col items-center my-8 w-full">
-          <label className="cursor-pointer bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-bold py-4 px-8 rounded-full shadow-lg text-lg flex items-center justify-center gap-2 w-3/4 text-center transition-all">
+        <div className="flex flex-col items-center my-6 w-full">
+          <label className="cursor-pointer bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-bold py-4 px-8 rounded-full shadow-lg text-lg flex items-center justify-center gap-2 w-3/4 text-center transition-all active:scale-95">
             {uploading ? 'Mengunggah...' : '📷 Jepret Foto'}
             <input
               type="file"
               accept="image/*"
-              capture="environment" // Otomatis membuka kamera belakang HP
+              capture="environment"
               onChange={handleFileUpload}
               disabled={uploading}
               className="hidden"
@@ -83,47 +101,49 @@ export default function CameraPage() {
           </p>
         </div>
       ) : (
-        /* JIKA KUOTA HABIS (SUDAH 5 FOTO): TAMPILKAN PESAN SELESAI */
         <div className="bg-gradient-to-br from-slate-800 to-slate-900 border border-amber-500/30 p-6 rounded-2xl text-center my-4 w-full shadow-xl">
-          <span className="text-4xl">🎉</span>
-          <h2 className="text-xl font-bold text-amber-400 mt-2">Kuota Foto Habis!</h2>
-          <p className="text-sm text-slate-300 mt-1">
-            Kamu sudah mengambil 5 foto terbaikmu. Hasil foto bisa kamu lihat dan unduh di bawah ini.
+          <span className="text-4xl">✨</span>
+          <h2 className="text-xl font-bold text-amber-400 mt-2">Terima Kasih!</h2>
+          <p className="text-sm text-slate-300 mt-2 leading-relaxed">
+            Kamu sudah melengkapi 5 foto acaramu. Terima kasih banyak sudah ikut mengabadikan momen berharga hari ini! ❤️
           </p>
         </div>
       )}
 
-      {/* GALERI HASIL FOTO TAMU (Hanya menampilkan foto milik tamu ini) */}
       {photos.length > 0 && (
         <section className="w-full mt-6">
           <h2 className="text-lg font-bold mb-4 border-b border-slate-800 pb-2">
             🖼️ Hasil Foto Kamu ({photos.length}/{MAX_PHOTOS})
           </h2>
           
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-4">
             {photos.map((url, index) => (
-              <div key={index} className="bg-slate-800 rounded-xl overflow-hidden border border-slate-700 p-2 flex flex-col justify-between">
-                <img 
-                  src={url} 
-                  alt={`Foto ${index + 1}`} 
-                  className="w-full h-36 object-cover rounded-lg mb-2"
-                />
-                <a
-                  href={url}
-                  download={`foto-acara-${index + 1}.jpg`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="bg-slate-700 hover:bg-slate-600 text-xs font-medium text-center py-2 px-1 rounded-lg transition-colors flex items-center justify-center gap-1"
+              <div 
+                key={index} 
+                className="bg-white p-2 pb-3 rounded-md shadow-2xl transition-transform hover:scale-105"
+              >
+                <div className="overflow-hidden rounded border border-gray-200">
+                  <img 
+                    src={url} 
+                    alt={`Foto ${index + 1}`} 
+                    className="w-full h-36 object-cover"
+                  />
+                </div>
+                
+                {/* Tombol Unduh Otomatis */}
+                <button
+                  onClick={() => handleDownload(url, index)}
+                  disabled={downloadingIndex === index}
+                  className="mt-2 w-full bg-slate-900 hover:bg-slate-800 text-amber-400 font-semibold text-xs py-2 px-1 rounded text-center block transition-colors shadow"
                 >
-                  ⬇️ Simpan Foto
-                </a>
+                  {downloadingIndex === index ? '⏳ Mengunduh...' : '⬇️ Simpan Foto'}
+                </button>
               </div>
             ))}
           </div>
         </section>
       )}
 
-      {/* Link Ke Galeri Bersama (Opsional) */}
       <div className="mt-auto pt-8 pb-4">
         <a 
           href="/gallery" 
