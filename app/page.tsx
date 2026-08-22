@@ -47,18 +47,20 @@ export default function CameraPage() {
         return;
       }
 
-      setUploading(true);
+  setUploading(true);
       const originalFile = event.target.files[0];
 
-      // OPSI KOMPRESI: Menjaga visual tetap tajam & menghemat ukuran file (~80-90%)
+      // --- PERBAIKAN SETELAN KOMPRESI (LEBIH TAJAM) ---
       const compressionOptions = {
-        maxSizeMB: 0.6,          // Ukuran maksimal ~600 KB
-        maxWidthOrHeight: 1920,  // Resolusi Full HD (sangat tajam di HP)
+        maxSizeMB: 1.5,          // Tingkatkan batas ukuran menjadi ~1.5 MB (sebelumnya 0.6 MB)
+        maxWidthOrHeight: 2560,  // Tingkatkan resolusi maksimal (resolusi 2.5K, sangat tajam di HP manapun)
         useWebWorker: true,
+        initialQuality: 0.9,    // Set kualitas awal sangat tinggi (90%)
       };
 
       // Proses kompresi di latar belakang
       const compressedFile = await imageCompression(originalFile, compressionOptions);
+      // ------------------------------------------------
 
       const fileExt = originalFile.name.split('.').pop();
       const fileName = `${Date.now()}.${fileExt}`;
