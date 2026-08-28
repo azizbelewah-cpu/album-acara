@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+// Import library kompresi
+import imageCompression from 'browser-image-compression';
 
 export default function CameraPage() {
   const [photos, setPhotos] = useState<string[]>([]);
@@ -52,9 +54,21 @@ export default function CameraPage() {
       setUploading(true);
       const originalFile = event.target.files[0];
 
-      // Membuat FormData untuk Cloudinary
+      // --- PROSES KOMPRESI FOTO KAMERA HP ---
+      // Mengubah format file besar/asing (HEIC/RAW) menjadi JPEG standar yang tajam
+      const compressionOptions = {
+        maxSizeMB: 1,           // Ukuran maksimal ~1MB (biar tajam tapi tidak ditolak Cloudinary)
+        maxWidthOrHeight: 2048, // Resolusi tinggi (setara 2K) agar tetap jernih
+        useWebWorker: true,
+        fileType: 'image/jpeg',  // Paksa jadi JPEG standar
+      };
+
+      const compressedBlob = await imageCompression(originalFile, compressionOptions);
+      // -------------------------------------
+
+      // Membuat FormData untuk Cloudinary menggunakan file yang sudah dikompresi
       const formData = new FormData();
-      formData.append('file', originalFile);
+      formData.append('file', compressedBlob);
       formData.append('upload_preset', UPLOAD_PRESET);
 
       // Upload langsung ke API Cloudinary
@@ -73,7 +87,7 @@ export default function CameraPage() {
         throw new Error(data.error?.message || 'Gagal mengunggah foto dari HP');
       }
 
-      // Gunakan URL Cloudinary dengan kompresi otomatis
+      // Gunakan URL Cloudinary dengan kompresi otomatis untuk tampilan galeri
       const optimizedUrl = data.secure_url.replace(
         '/upload/',
         '/upload/f_auto,q_auto/'
@@ -115,10 +129,12 @@ export default function CameraPage() {
       {photos.length < MAX_PHOTOS ? (
         <div className="flex flex-col items-center my-4 w-full">
           <label className="cursor-pointer bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-bold py-3.5 px-8 rounded-full shadow-lg text-base flex items-center justify-center gap-2 w-3/4 text-center transition-all active:scale-95">
-            {uploading ? 'Mengunggah ke Cloud...' : '📸 Ambil Foto'}
+            {uploading ? 'Mengolah & Mengunggah...' : '📸 Ambil Foto'}
             <input
               type="file"
               accept="image/*"
+              // Mengembalikan atribut ini agar langsung membuka kamera
+              capture="environment" 
               onChange={handleFileUpload}
               disabled={uploading}
               className="hidden"
