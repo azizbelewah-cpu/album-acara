@@ -1,14 +1,16 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
-import imageCompression from 'browser-image-compression';
 
 export default function CameraPage() {
   const [photos, setPhotos] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
   const [downloadingIndex, setDownloadingIndex] = useState<number | null>(null);
   const MAX_PHOTOS = 5;
+
+  // DATA CLOUDINARY KAMU
+  const CLOUD_NAME = "tc4vv1dd";
+  const UPLOAD_PRESET = "wedding_preset";
 
   useEffect(() => {
     const savedPhotos = localStorage.getItem('my_guest_photos');
@@ -47,35 +49,35 @@ export default function CameraPage() {
         return;
       }
 
-  setUploading(true);
+      setUploading(true);
       const originalFile = event.target.files[0];
 
-      // --- PERBAIKAN SETELAN KOMPRESI (LEBIH TAJAM) ---
-      const compressionOptions = {
-        maxSizeMB: 1.5,          // Tingkatkan batas ukuran menjadi ~1.5 MB (sebelumnya 0.6 MB)
-        maxWidthOrHeight: 2560,  // Tingkatkan resolusi maksimal (resolusi 2.5K, sangat tajam di HP manapun)
-        useWebWorker: true,
-        initialQuality: 0.9,    // Set kualitas awal sangat tinggi (90%)
-      };
+      // Kirim file langsung ke Cloudinary
+      const formData = new FormData();
+      formData.append('file', originalFile);
+      formData.append('upload_preset', UPLOAD_PRESET);
 
-      // Proses kompresi di latar belakang
-      const compressedFile = await imageCompression(originalFile, compressionOptions);
-      // ------------------------------------------------
+      const response = await fetch(
+        `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
+        {
+          method: 'POST',
+          body: formData,
+        }
+      );
 
-      const fileExt = originalFile.name.split('.').pop();
-      const fileName = `${Date.now()}.${fileExt}`;
-      const filePath = `${fileName}`;
+      const data = await response.json();
 
-      const { error: uploadError } = await supabase.storage
-        .from('foto-acara')
-        .upload(filePath, compressedFile);
+      if (!response.ok) {
+        throw new Error(data.error?.message || 'Gagal mengunggah foto');
+      }
 
-      if (uploadError) throw uploadError;
+      // Trik Cloudinary: Kompresi otomatis (f_auto,q_auto) agar tajam & hemat ruang
+      const optimizedUrl = data.secure_url.replace(
+        '/upload/',
+        '/upload/f_auto,q_auto/'
+      );
 
-      const { data } = supabase.storage.from('foto-acara').getPublicUrl(filePath);
-      const photoUrl = data.publicUrl;
-
-      const updatedPhotos = [...photos, photoUrl];
+      const updatedPhotos = [...photos, optimizedUrl];
       setPhotos(updatedPhotos);
       localStorage.setItem('my_guest_photos', JSON.stringify(updatedPhotos));
 
@@ -95,7 +97,7 @@ export default function CameraPage() {
           Wedding Gallery
         </p>
         <h1 className="font-wedding text-5xl text-amber-300 py-1 drop-shadow">
-          nama & nama
+          Budi & Ani
         </h1>
         <p className="font-serif-custom italic text-xs text-slate-400 mt-1">
           "Abadikan momen manis bersama kami hari ini"
@@ -111,7 +113,7 @@ export default function CameraPage() {
       {photos.length < MAX_PHOTOS ? (
         <div className="flex flex-col items-center my-4 w-full">
           <label className="cursor-pointer bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-bold py-3.5 px-8 rounded-full shadow-lg text-base flex items-center justify-center gap-2 w-3/4 text-center transition-all active:scale-95">
-            {uploading ? 'Memproses & Mengunggah...' : '📸 Ambil Foto'}
+            {uploading ? 'Mengunggah ke Cloud...' : '📸 Ambil Foto'}
             <input
               type="file"
               accept="image/*"
