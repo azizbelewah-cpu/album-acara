@@ -8,7 +8,7 @@ export default function CameraPage() {
   const [downloadingIndex, setDownloadingIndex] = useState<number | null>(null);
   const MAX_PHOTOS = 5;
 
-  // DATA CLOUDINARY KAMU
+  // DATA CLOUDINARY
   const CLOUD_NAME = "tc4vv1dd";
   const UPLOAD_PRESET = "wedding_preset";
 
@@ -52,11 +52,12 @@ export default function CameraPage() {
       setUploading(true);
       const originalFile = event.target.files[0];
 
-      // Kirim file langsung ke Cloudinary
+      // Membuat FormData untuk Cloudinary
       const formData = new FormData();
       formData.append('file', originalFile);
       formData.append('upload_preset', UPLOAD_PRESET);
 
+      // Upload langsung ke API Cloudinary
       const response = await fetch(
         `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
         {
@@ -68,10 +69,11 @@ export default function CameraPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error?.message || 'Gagal mengunggah foto');
+        // Menampilkan pesan error asli dari Cloudinary jika gagal
+        throw new Error(data.error?.message || 'Gagal mengunggah foto dari HP');
       }
 
-      // Trik Cloudinary: Kompresi otomatis (f_auto,q_auto) agar tajam & hemat ruang
+      // Gunakan URL Cloudinary dengan kompresi otomatis
       const optimizedUrl = data.secure_url.replace(
         '/upload/',
         '/upload/f_auto,q_auto/'
@@ -81,8 +83,8 @@ export default function CameraPage() {
       setPhotos(updatedPhotos);
       localStorage.setItem('my_guest_photos', JSON.stringify(updatedPhotos));
 
-    } catch (error) {
-      alert('Gagal mengunggah foto. Silakan coba lagi!');
+    } catch (error: any) {
+      alert(`Gagal upload: ${error.message || 'Silakan coba lagi!'}`);
       console.error(error);
     } finally {
       setUploading(false);
@@ -117,7 +119,6 @@ export default function CameraPage() {
             <input
               type="file"
               accept="image/*"
-              capture="environment"
               onChange={handleFileUpload}
               disabled={uploading}
               className="hidden"
