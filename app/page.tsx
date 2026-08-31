@@ -81,7 +81,6 @@ export default function CameraPage() {
     event.target.value = '';
   };
 
-  // FUNGSI HAPUS FOTO SAYA & KEMBALIKAN KUOTA
   const handleDeletePhoto = (indexToDelete: number) => {
     if (confirm('Yakin ingin menghapus foto ini? Kuota fotomu akan bertambah kembali.')) {
       const updatedPhotos = photos.filter((_, index) => index !== indexToDelete);
@@ -122,117 +121,119 @@ export default function CameraPage() {
   const totalCount = photos.length + uploadingCount;
 
   return (
-    <main className="min-h-screen bg-slate-950 text-white p-4 max-w-md mx-auto flex flex-col items-center">
-      {/* Header */}
-      <div className="text-center mt-6 mb-4">
-        <p className="text-xs uppercase tracking-widest text-amber-200/70 font-semibold mb-1">
-          Wedding Gallery
-        </p>
-        <h1 className="font-wedding text-5xl text-amber-300 py-1 drop-shadow">
-          Budi & Ani
-        </h1>
-        <p className="font-serif-custom italic text-xs text-slate-400 mt-1">
-          "Abadikan momen manis bersama kami hari ini"
-        </p>
-      </div>
-
-      {/* Indikator Kuota */}
-      <div className="bg-slate-900/80 px-4 py-1.5 rounded-full text-xs font-medium mb-4 border border-amber-500/20 text-slate-300 shadow-inner">
-        Sisa Kuota Foto: <span className="text-amber-400 font-bold">{MAX_PHOTOS - totalCount}</span> / {MAX_PHOTOS}
-      </div>
-
-      {/* Indikator Latar Belakang */}
-      {uploadingCount > 0 && (
-        <div className="bg-amber-500/10 border border-amber-500/30 text-amber-300 px-3 py-1 rounded-full text-xs font-medium mb-4 animate-pulse flex items-center gap-1.5">
-          <span>⏳</span> Mengunggah {uploadingCount} foto di latar belakang...
-        </div>
-      )}
-
-      {/* Tombol Ambil Foto */}
-      {totalCount < MAX_PHOTOS ? (
-        <div className="flex flex-col items-center my-2 w-full">
-          <label className="cursor-pointer bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-bold py-3.5 px-8 rounded-full shadow-lg text-base flex items-center justify-center gap-2 w-3/4 text-center transition-all active:scale-95">
-            📸 Ambil Foto
-            <input
-              type="file"
-              accept="image/*"
-              capture="environment"
-              onChange={handleCapture}
-              className="hidden"
-            />
-          </label>
-        </div>
-      ) : (
-        <div className="bg-gradient-to-b from-slate-900 to-slate-950 border border-amber-500/30 p-6 rounded-2xl text-center my-4 w-full shadow-2xl">
-          <span className="text-3xl">💍</span>
-          <h2 className="font-wedding text-4xl text-amber-300 mt-1">Terima Kasih</h2>
-          <p className="font-serif-custom text-xs text-slate-300 mt-2 leading-relaxed">
-            Kehadiran dan senyumanmu membuat hari bahagia kami semakin sempurna. Foto-fotomu sudah tersimpan aman di album kami!
+    // Background dibuat full screen di seluruh layar (w-full min-h-screen)
+    <div className="w-full min-h-screen bg-slate-950 text-white flex justify-center">
+      <main className="w-full max-w-md min-h-screen p-5 flex flex-col items-center justify-between">
+        
+        {/* Header Section */}
+        <div className="w-full flex flex-col items-center pt-6">
+          <p className="text-[10px] uppercase tracking-[0.2em] text-amber-300/80 font-semibold mb-1">
+            Wedding Photo Booth
           </p>
-        </div>
-      )}
+          <h1 className="font-wedding text-5xl text-amber-300 py-1 drop-shadow-md text-center">
+            Budi & Ani
+          </h1>
+          <p className="font-serif-custom italic text-xs text-slate-400 mt-1 text-center">
+            "Abadikan momen manis bersama kami hari ini"
+          </p>
 
-      {/* Galeri Foto Saya */}
-      {photos.length > 0 && (
-        <section className="w-full mt-6">
-          <h2 className="font-serif-custom text-sm font-semibold mb-4 border-b border-slate-800 pb-2 text-amber-200/80 tracking-wide">
-            Hasil Foto Kamu ({photos.length}/{MAX_PHOTOS})
-          </h2>
-          
-          <div className="grid grid-cols-2 gap-4">
-            {photos.map((url, index) => (
-              <div 
-                key={index} 
-                className="bg-stone-50 p-2.5 pb-3 rounded shadow-xl transition-transform hover:scale-105 relative group"
-              >
-                {/* Tombol Hapus Foto */}
-                <button
-                  onClick={() => handleDeletePhoto(index)}
-                  title="Hapus foto ini"
-                  className="absolute -top-2 -right-2 bg-red-600 hover:bg-red-700 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold shadow-md z-10 transition-transform active:scale-90"
-                >
-                  ✕
-                </button>
-
-                <div className="overflow-hidden border border-stone-200 aspect-square rounded-sm">
-                  <img 
-                    src={url} 
-                    alt={`Foto ${index + 1}`} 
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                
-                <button
-                  onClick={() => handleDownload(url, index)}
-                  disabled={downloadingIndex === index}
-                  className="mt-2.5 w-full bg-slate-900 hover:bg-slate-800 text-amber-300 font-medium text-xs py-1.5 px-1 rounded text-center block transition-colors shadow"
-                >
-                  {downloadingIndex === index ? '⏳ Mengunduh...' : '⬇️ Simpan Foto'}
-                </button>
-              </div>
-            ))}
+          <div className="mt-4 bg-slate-900/90 px-4 py-1.5 rounded-full text-xs font-medium border border-amber-500/20 text-slate-300 shadow-inner">
+            Sisa Kuota Foto: <span className="text-amber-400 font-bold">{MAX_PHOTOS - totalCount}</span> / {MAX_PHOTOS}
           </div>
-        </section>
-      )}
 
-      {/* Footer Navigasi */}
-      <div className="mt-auto pt-8 pb-4 flex flex-col items-center gap-2">
-        <a 
-          href="/gallery" 
-          className="font-serif-custom text-xs text-amber-200/60 underline hover:text-amber-200"
-        >
-          Lihat Album Foto Bersama →
-        </a>
+          {uploadingCount > 0 && (
+            <div className="mt-3 bg-amber-500/10 border border-amber-500/30 text-amber-300 px-3 py-1 rounded-full text-xs font-medium animate-pulse flex items-center gap-1.5">
+              <span>⏳</span> Mengunggah {uploadingCount} foto di latar belakang...
+            </div>
+          )}
+        </div>
 
+        {/* Action Button Section */}
+        <div className="w-full flex flex-col items-center my-6">
+          {totalCount < MAX_PHOTOS ? (
+            <label className="cursor-pointer bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 hover:from-amber-500 hover:to-amber-700 text-slate-950 font-bold py-4 px-8 rounded-full shadow-lg text-base flex items-center justify-center gap-2 w-full text-center transition-all active:scale-95 border border-amber-300/30">
+              📸 Ambil Foto
+              <input
+                type="file"
+                accept="image/*"
+                capture="environment"
+                onChange={handleCapture}
+                className="hidden"
+              />
+            </label>
+          ) : (
+            <div className="bg-gradient-to-b from-slate-900 to-slate-950 border border-amber-500/30 p-6 rounded-2xl text-center w-full shadow-2xl">
+              <span className="text-3xl">💍</span>
+              <h2 className="font-wedding text-4xl text-amber-300 mt-1">Terima Kasih</h2>
+              <p className="font-serif-custom text-xs text-slate-300 mt-2 leading-relaxed">
+                Kehadiran dan senyumanmu membuat hari bahagia kami semakin sempurna. Foto-fotomu sudah tersimpan aman di album kami!
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* Gallery Section */}
         {photos.length > 0 && (
-          <button
-            onClick={handleResetLocalStorage}
-            className="text-[10px] text-red-400/60 underline hover:text-red-300 mt-2"
-          >
-            Reset Semua Foto Saya
-          </button>
+          <section className="w-full mb-6">
+            <h2 className="font-serif-custom text-xs font-semibold mb-3 border-b border-slate-800 pb-2 text-amber-200/80 tracking-wide uppercase">
+              Hasil Foto Kamu ({photos.length}/{MAX_PHOTOS})
+            </h2>
+            
+            <div className="grid grid-cols-2 gap-3">
+              {photos.map((url, index) => (
+                <div 
+                  key={index} 
+                  className="bg-stone-50 p-2 pb-2.5 rounded shadow-xl relative"
+                >
+                  <button
+                    onClick={() => handleDeletePhoto(index)}
+                    title="Hapus foto ini"
+                    className="absolute -top-2 -right-2 bg-red-600 hover:bg-red-700 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold shadow-md z-10"
+                  >
+                    ✕
+                  </button>
+
+                  <div className="overflow-hidden border border-stone-200 aspect-square rounded-sm">
+                    <img 
+                      src={url} 
+                      alt={`Foto ${index + 1}`} 
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  
+                  <button
+                    onClick={() => handleDownload(url, index)}
+                    disabled={downloadingIndex === index}
+                    className="mt-2 w-full bg-slate-900 hover:bg-slate-800 text-amber-300 font-medium text-[11px] py-1.5 px-1 rounded text-center block transition-colors"
+                  >
+                    {downloadingIndex === index ? '⏳ Mengunduh...' : '⬇️ Simpan'}
+                  </button>
+                </div>
+              ))}
+            </div>
+          </section>
         )}
-      </div>
-    </main>
+
+        {/* Footer Navigation */}
+        <div className="w-full pb-4 pt-2 flex flex-col items-center gap-2 border-t border-slate-900">
+          <a 
+            href="/gallery" 
+            className="font-serif-custom text-xs text-amber-200/70 underline hover:text-amber-200"
+          >
+            Lihat Album Foto Bersama →
+          </a>
+
+          {photos.length > 0 && (
+            <button
+              onClick={handleResetLocalStorage}
+              className="text-[10px] text-red-400/60 underline hover:text-red-300 mt-1"
+            >
+              Reset Semua Foto Saya
+            </button>
+          )}
+        </div>
+
+      </main>
+    </div>
   );
 }
