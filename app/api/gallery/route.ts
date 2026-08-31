@@ -6,9 +6,9 @@ export async function GET() {
   const API_SECRET = "6_pM11zpTlgKS_5clYwM_2BrYV4"; 
 
   try {
-    // Mengambil seluruh resource image langsung melalui API resmi Cloudinary
+    // Memanggil API khusus TAG agar HANYA foto 'wedding_event' yang diambil
     const response = await fetch(
-      `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/resources/image?max_results=100`,
+      `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/resources/image/tags/wedding_event?max_results=100`,
       {
         headers: {
           Authorization: `Basic ${Buffer.from(`${API_KEY}:${API_SECRET}`).toString('base64')}`,
@@ -20,10 +20,12 @@ export async function GET() {
     const data = await response.json();
 
     if (!response.ok) {
+      if (response.status === 404) {
+        return NextResponse.json({ photos: [] });
+      }
       throw new Error(data.error?.message || 'Gagal mengambil foto');
     }
 
-    // Ambil URL foto
     const imageUrls = data.resources.map((file: any) => 
       file.secure_url.replace('/upload/', '/upload/f_auto,q_auto/')
     );
