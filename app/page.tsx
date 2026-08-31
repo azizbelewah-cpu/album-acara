@@ -81,11 +81,31 @@ export default function CameraPage() {
     event.target.value = '';
   };
 
-  const handleDeletePhoto = (indexToDelete: number) => {
-    if (confirm('Yakin ingin menghapus foto ini? Kuota fotomu akan bertambah kembali.')) {
-      const updatedPhotos = photos.filter((_, index) => index !== indexToDelete);
-      setPhotos(updatedPhotos);
-      localStorage.setItem('my_guest_photos', JSON.stringify(updatedPhotos));
+ const handleDeletePhoto = async (indexToDelete: number) => {
+    const photoUrlToDelete = photos[indexToDelete];
+
+    if (!confirm('Yakin ingin menghapus foto ini? Foto akan dihapus permanen dari album bersama.')) {
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/delete-photo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ photoUrl: photoUrlToDelete }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        const updatedPhotos = photos.filter((_, index) => index !== indexToDelete);
+        setPhotos(updatedPhotos);
+        localStorage.setItem('my_guest_photos', JSON.stringify(updatedPhotos));
+      } else {
+        alert('Gagal menghapus dari server Cloudinary');
+      }
+    } catch (error) {
+      alert('Terjadi kesalahan jaringan');
     }
   };
 
