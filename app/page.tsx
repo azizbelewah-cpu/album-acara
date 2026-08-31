@@ -81,7 +81,7 @@ export default function CameraPage() {
     event.target.value = '';
   };
 
- const handleDeletePhoto = async (indexToDelete: number) => {
+  const handleDeletePhoto = async (indexToDelete: number) => {
     const photoUrlToDelete = photos[indexToDelete];
 
     if (!confirm('Yakin ingin menghapus foto ini? Foto akan dihapus permanen dari album bersama.')) {
@@ -131,17 +131,9 @@ export default function CameraPage() {
     }
   };
 
-  const handleResetLocalStorage = () => {
-    if (confirm('Hapus semua daftar foto tes dari perangkat ini?')) {
-      localStorage.removeItem('my_guest_photos');
-      setPhotos([]);
-    }
-  };
-
   const totalCount = photos.length + uploadingCount;
 
   return (
-    // Background dibuat full screen di seluruh layar (w-full min-h-screen)
     <div className="w-full min-h-screen bg-slate-950 text-white flex justify-center">
       <main className="w-full max-w-md min-h-screen p-5 flex flex-col items-center justify-between">
         
@@ -242,15 +234,6 @@ export default function CameraPage() {
           >
             Lihat Album Foto Bersama →
           </a>
-
-          {photos.length > 0 && (
-            <button
-              onClick={handleResetLocalStorage}
-              className="text-[10px] text-red-400/60 underline hover:text-red-300 mt-1"
-            >
-              Reset Semua Foto Saya
-            </button>
-          )}
         </div>
 
       </main>
