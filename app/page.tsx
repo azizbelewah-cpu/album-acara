@@ -55,21 +55,22 @@ export default function CameraPage() {
       const originalFile = event.target.files[0];
 
       // --- PROSES KOMPRESI FOTO KAMERA HP ---
-      // Mengubah format file besar/asing (HEIC/RAW) menjadi JPEG standar yang tajam
       const compressionOptions = {
-        maxSizeMB: 1,           // Ukuran maksimal ~1MB (biar tajam tapi tidak ditolak Cloudinary)
-        maxWidthOrHeight: 2048, // Resolusi tinggi (setara 2K) agar tetap jernih
+        maxSizeMB: 1,
+        maxWidthOrHeight: 2048,
         useWebWorker: true,
-        fileType: 'image/jpeg',  // Paksa jadi JPEG standar
+        fileType: 'image/jpeg',
       };
 
       const compressedBlob = await imageCompression(originalFile, compressionOptions);
       // -------------------------------------
 
-      // Membuat FormData untuk Cloudinary menggunakan file yang sudah dikompresi
+      // Membuat FormData untuk Cloudinary
       const formData = new FormData();
       formData.append('file', compressedBlob);
       formData.append('upload_preset', UPLOAD_PRESET);
+      // PENAMBAHAN TAG: Agar API Galeri mengenali foto dari aplikasi ini
+      formData.append('tags', 'wedding_event');
 
       // Upload langsung ke API Cloudinary
       const response = await fetch(
@@ -83,11 +84,10 @@ export default function CameraPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        // Menampilkan pesan error asli dari Cloudinary jika gagal
         throw new Error(data.error?.message || 'Gagal mengunggah foto dari HP');
       }
 
-      // Gunakan URL Cloudinary dengan kompresi otomatis untuk tampilan galeri
+      // Gunakan URL Cloudinary dengan kompresi otomatis
       const optimizedUrl = data.secure_url.replace(
         '/upload/',
         '/upload/f_auto,q_auto/'
@@ -133,7 +133,6 @@ export default function CameraPage() {
             <input
               type="file"
               accept="image/*"
-              // Mengembalikan atribut ini agar langsung membuka kamera
               capture="environment" 
               onChange={handleFileUpload}
               disabled={uploading}
