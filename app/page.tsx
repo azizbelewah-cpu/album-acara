@@ -49,7 +49,7 @@ export default function CameraPage() {
       if (response.ok) {
         const optimizedUrl = data.secure_url.replace(
           '/upload/',
-          '/upload/f_auto,q_auto/'
+          '/upload/f_auto,q_auto,e_improve,e_auto_color,e_sharpen:50/'
         );
 
         setPhotos((prevPhotos) => {
