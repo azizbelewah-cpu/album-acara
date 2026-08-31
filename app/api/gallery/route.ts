@@ -3,14 +3,14 @@ import { NextResponse } from 'next/server';
 export async function GET() {
   const CLOUD_NAME = "tc4vv1dd";
   
-  // Masukkan API Key dan API Secret dari Dashboard Cloudinary kamu
-  // Bisa ditemukan di halaman utama/Settings Cloudinary
-  const API_KEY = "731377338411544"; 
-  const API_SECRET = "6_pM11zpTlgKS_5clYwM_2BrYV4"; 
+  // Pastikan API_KEY dan API_SECRET sudah diisi dengan milikmu
+  const API_KEY = "MASUKKAN_API_KEY_KAMU"; 
+  const API_SECRET = "MASUKKAN_API_SECRET_KAMU"; 
 
   try {
+    // Memfilter agar HANYA mengambil foto di folder foto-wedding
     const response = await fetch(
-      `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/resources/image?max_results=100`,
+      `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/resources/image?type=upload&prefix=foto-wedding/&max_results=100`,
       {
         headers: {
           Authorization: `Basic ${Buffer.from(`${API_KEY}:${API_SECRET}`).toString('base64')}`,
